@@ -1,0 +1,279 @@
+
+
+---
+
+# Software Requirements Specification (SRS)
+
+**System Name:** AI-Driven Institutional Financial Forecasting and Analytics System
+
+---
+
+## 1. Purpose of the System
+
+The system **shall** analyze historical and transactional financial data of an educational institution and **shall** provide:
+
+* Predictive forecasts of revenue, expenses, cash flow, and surplus
+* Prescriptive recommendations for financial optimization
+* Anomaly detection for unusual financial behavior
+* Decision-support dashboards for institutional leadership
+
+This system is intended for **Principals, Heads of Institutions (HoI), Finance Committees, and Management**.
+
+---
+
+## 2. Scope of the System
+
+The system **shall** support financial planning, budgeting, monitoring, and long-term sustainability of private educational institutions by integrating AI/ML models with historical financial data.
+The system **shall not** perform accounting transactions or replace ERP systems. 
+
+---
+
+## 3. User Roles
+
+The system **shall** support the following user roles:
+
+1. **Administrator** – manages data sources, users, and system configuration
+2. **Finance Officer** – uploads financial data and reviews reports
+3. **Management User (Principal/HoI)** – views forecasts, dashboards, and recommendations
+
+---
+
+## 4. Data Requirements
+
+### 4.1 Data Sources
+
+The system **shall** ingest data from the following institutional sources:
+
+#### Revenue Data
+
+* Tuition fees
+* Hostel fees
+* Transport fees
+* Research grants
+* Consultancy income
+* Donations
+
+#### Expense Data
+
+* Salaries
+* Maintenance
+* Utilities
+* Equipment
+* Administrative costs
+
+#### Financial Position Data
+
+* Assets (land, buildings, infrastructure)
+* Liabilities (loans, depreciation schedules)
+
+#### Operational Data
+
+* Cash flow (monthly inflow/outflow)
+* Departmental budgets (allocated vs spent)
+* Procurement records
+* Payroll and HR records
+* Utility consumption (electricity, water, internet)
+
+#### Academic Data
+
+* Student enrollment count
+* Dropout rate
+* Category-wise fee structure
+* Faculty count
+
+---
+
+### 4.2 Historical Data Period
+
+The system **shall** require **a minimum of 3–5 years** of monthly or quarterly historical data for reliable forecasting. 
+
+---
+
+## 5. Data Attributes (Features)
+
+The system **shall** support at least the following attributes: 
+
+| Attribute               | Type        | Description               |
+| ----------------------- | ----------- | ------------------------- |
+| Financial_Year          | Categorical | Reporting period          |
+| Department_Name         | Categorical | Revenue/expense source    |
+| Income_Type             | Categorical | Tuition, grants, etc.     |
+| Income_Amount           | Numeric     | Revenue amount            |
+| Expense_Type            | Categorical | Salary, utilities, etc.   |
+| Expense_Amount          | Numeric     | Expense amount            |
+| Asset_Value             | Numeric     | Total asset worth         |
+| Liability_Value         | Numeric     | Outstanding liabilities   |
+| Net_Surplus             | Numeric     | Income – Expenses         |
+| Budget_Allocated        | Numeric     | Planned department budget |
+| Budget_Spent            | Numeric     | Actual expenditure        |
+| Student_Count           | Numeric     | Total enrolled students   |
+| Faculty_Count           | Numeric     | Teaching staff count      |
+| Research_Grants         | Numeric     | Grant funds received      |
+| Utility_Cost            | Numeric     | Electricity/water costs   |
+| Salary_to_Revenue_Ratio | Derived     | Salary ÷ Revenue          |
+
+---
+
+## 6. Functional Requirements
+
+### 6.1 Data Preprocessing
+
+The system **shall**:
+
+* Handle missing, inconsistent, and erroneous data
+* Normalize numerical values
+* Categorize expenses by type (salary, infrastructure, utilities, etc.) 
+
+---
+
+### 6.2 Exploratory Data Analysis (EDA)
+
+The system **shall** perform EDA to:
+
+* Identify income and expense trends
+* Detect seasonality (e.g., semester-based fee inflow)
+* Identify correlations between financial and operational variables
+
+---
+
+### 6.3 Correlation Analysis
+
+The system **shall** compute and visualize correlations including but not limited to: 
+
+* Student_Count ↔ Total_Revenue
+* Faculty_Count ↔ Salary_Expenses
+* Utility_Cost ↔ Student_Count
+* Budget_Allocated ↔ Budget_Spent
+* Research_Grants ↔ Total_Revenue
+* Liability_Value ↔ Net_Surplus
+* Salary_to_Revenue_Ratio ↔ Net_Surplus
+* Power_Cost ↔ Maintenance_Cost
+* Student_Count ↔ IT_Expenditure
+
+---
+
+### 6.4 Predictive Analytics
+
+The system **shall** provide the following predictive capabilities:
+
+#### Revenue Forecasting
+
+* Forecast future revenue trends using **ARIMA and LSTM models**
+
+#### Expense Forecasting
+
+* Predict expense growth and budget overruns using **regression models**
+
+#### Cash Flow Forecasting
+
+* Forecast inflow-outflow balance using **LSTM/GRU models** 
+
+---
+
+### 6.5 Anomaly Detection
+
+The system **shall**:
+
+* Detect sudden spikes or drops in income or expenses
+* Use **Isolation Forest**, **Autoencoders**, and **statistical thresholds**
+* Generate alerts for abnormal financial behavior
+
+---
+
+### 6.6 Prescriptive Analytics
+
+The system **shall**:
+
+* Recommend optimal fund allocation using **Linear Programming or Genetic Algorithms**
+* Suggest cost-optimization strategies
+* Recommend limits for salary-to-revenue ratios
+* Provide energy-efficiency recommendations for utility cost reduction 
+
+---
+
+### 6.7 Scenario Analysis
+
+The system **shall** simulate “what-if” scenarios including:
+
+* Increase or decrease in student enrollment
+* Changes in fee structure
+* Variations in grant funding
+* Infrastructure expansion impacts
+
+---
+
+### 6.8 Financial Health Scoring
+
+The system **shall** generate a **Financial Health Index** using:
+
+* Multiple financial indicators
+* Ensemble or clustering techniques 
+
+---
+
+## 7. Visualization & Dashboard Requirements
+
+The system **shall** provide interactive dashboards displaying:
+
+* Forecast vs actual revenue/expenses
+* Year-on-year comparisons
+* Expense heatmaps
+* Department-wise budget utilization
+* Cash flow trends
+* Anomaly alerts
+* Financial KPIs (surplus ratio, liquidity index, expense deviation)
+
+Dashboards **shall** support real-time decision-making.
+
+---
+
+## 8. Reporting Requirements
+
+The system **shall**:
+
+* Generate **automated quarterly financial health reports**
+* Export reports for audits, accreditation (NBA/NAAC), and governance
+
+---
+
+## 9. Non-Functional Requirements
+
+### Performance
+
+* The system **shall** process multi-year financial datasets efficiently.
+
+### Scalability
+
+* The system **shall** be scalable for long-term institutional use.
+
+### Reliability
+
+* Forecasts **shall** be reproducible using the same input data.
+
+### Usability
+
+* Dashboards **shall** be usable by non-technical management users.
+
+---
+
+## 10. Tools & Technologies
+
+The system **shall** use: 
+
+* **Python** (pandas, NumPy, statsmodels, TensorFlow/Keras)
+* **ARIMA, LSTM, GRU, Isolation Forest**
+* **Power BI or Tableau** for dashboards
+
+---
+
+## 11. Expected Outcomes
+
+The system **shall deliver**:
+
+* Accurate financial forecasts
+* Early detection of inefficiencies
+* Data-driven budgeting support
+* Improved financial transparency
+* Long-term institutional sustainability
+
+
