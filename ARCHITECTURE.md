@@ -126,7 +126,25 @@ produces the same kind of answer from the same facts — so a demo never breaks.
 
 ---
 
-## 5. The data model (tables)
+## 5. Screen → API endpoint reference
+
+Each screen is powered by a few endpoints. Every endpoint lives in `main.py` and
+delegates to a function in `services/analytics.py` (or `ai_insights.py`).
+
+| Screen | Endpoints it calls |
+|---|---|
+| Executive Summary | `GET /api/executive-summary`, `GET /api/trends`, `GET /api/expense-breakdown`, `GET /api/vendors`, `GET /api/ai/executive-summary` |
+| Forecasting | `GET /api/forecast/revenue`, `GET /api/forecast/expense` |
+| Financial Analytics | `GET /api/financial-position`, `GET /api/vendors`, `GET /api/expense-breakdown`, `GET /api/budget-variance`, `GET /api/anomalies` |
+| AI Insights | `GET /api/ai/executive-summary`, `GET /api/ai/suggested-questions`, `POST /api/ai/ask` |
+| Scenario Analysis | `GET /api/scenario` (with enrolment / fee / grant / salary parameters) |
+
+Health check: `GET /health`. Interactive docs for all endpoints:
+`http://localhost:8000/docs`.
+
+---
+
+## 6. The data model (tables)
 
 ```
 departments ── budgets
@@ -146,7 +164,7 @@ month and forecast.
 
 ---
 
-## 6. Tech stack at a glance
+## 7. Tech stack at a glance
 
 | Layer | Technology |
 |---|---|
@@ -158,7 +176,7 @@ month and forecast.
 
 ---
 
-## 7. How the analytics actually work (the honest details)
+## 8. How the analytics actually work (the honest details)
 
 - **Forecasting** uses Holt-Winters exponential smoothing (a standard
   time-series method). The shaded band is the 95% confidence range, derived
