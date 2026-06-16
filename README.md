@@ -1,128 +1,113 @@
-# AI-Driven Institutional Financial Forecasting and Analytics System
+# Supply Chain Intelligence Platform
 
-## Overview
+An **AI-driven supply chain & operations intelligence platform** that turns raw
+transactional data into executive decision support: demand and cost forecasting,
+supplier and cost-driver analytics, working-capital monitoring, scenario
+planning, and an AI operations analyst.
 
-The **AI-Driven Institutional Financial Forecasting and Analytics System** is a comprehensive solution designed to assist educational institutions in financial planning, budgeting, and long-term sustainability. By integrating historical financial data with advanced AI/ML models, the system provides predictive insights, anomaly detection, and decision-support dashboards for management.
+It is designed to answer the question a supply-chain leader actually asks:
+**"Where are we exposed, what's driving it, and what should we do about it?"**
 
-**Key Goals:**
-*   **Forecast**: Revenue, expenses, and cash flow using ARIMA and LSTM models.
-*   **Analyze**: Identify trends, correlations, and financial health indicators.
-*   **Optimize**: Provide prescriptive recommendations for budget allocation and cost reduction.
-*   **Monitor**: Detect financial anomalies and track real-time KPIs.
+---
 
-## Features
+## What it does
 
-### 1. Dashboard & Visualization
-*   Interactive dashboards for revenue, expenses, and surplus.
-*   Visualizations for budget utilization, department-wise breakdown, and historical trends.
-*   Key Financial Indicators (KPIs) like Operating Margin and Cash Flow Stability.
+| Capability | Description |
+|---|---|
+| **Executive Summary** | Health score, demand/cost/margin KPIs, risk posture and an AI briefing on one screen. |
+| **Demand & Cost Forecasting** | Exponential-smoothing forecasts with 95% confidence bands and a plain-language read-out. |
+| **Operational Intelligence** | Supplier performance (spend, on-time delivery, defects, risk tier), cost drivers, budget variance, and spend-anomaly detection. |
+| **AI Insights** | An auto-generated executive briefing and an interactive AI operations analyst, both grounded in live metrics. |
+| **Scenario Planning** | Model demand, price, material-cost and freight shocks on operating margin in real time. |
 
-### 2. Predictive Analytics
-*   **Revenue & Expense Forecasting**: 12-60 month projections using time-series analysis.
-*   **Scenario Analysis**: Simulate the impact of changes in enrollment, fees, grants, and salaries on the bottom line.
+---
 
-### 3. Advanced Analytics
-*   **Correlation Analysis**: Understand relationships between student count, faculty size, utility costs, and revenue.
-*   **Anomaly Detection**: Automatically flag unusual financial transactions or spikes.
-*   **Financial Health Index**: A composite score (0-100) indicating the institution's financial stability.
-
-### 4. Reporting
-*   Automated generation of quarterly financial health reports for audits and governance.
-
-## Technology Stack
-
-### Backend
-*   **Framework**: FastAPI (Python)
-*   **Database**: SQLite (via SQLAlchemy)
-*   **ML/Analytics**:
-    *   `pandas`, `numpy` for data manipulation.
-    *   `statsmodels` for ARIMA forecasting.
-    *   `scikit-learn` for Isolation Forest (Anomaly Detection) and Linear Regression.
-    *   `scipy` for optimization tasks.
-
-### Frontend
-*   **Framework**: React (Vite)
-*   **Styling**: Vanilla CSS (Modern, Responsive Design)
-*   **Charting**: Chart.js / Recharts (implied)
-
-## Project Structure
+## Architecture
 
 ```
-Project/
-├── backend/                # FastAPI Application
-│   ├── services/           # Business logic & Analytic services
-│   ├── main.py             # API Entry point
-│   ├── ml_engine.py        # Core ML & Forecasting logic
-│   ├── models.py           # SQLAlchemy Database Models
-│   ├── schemas.py          # Pydantic Schemas
-│   ├── database.py         # DB Connection
-│   └── requirements.txt    # Python Dependencies
-├── frontend/               # React Application
-│   ├── src/                # Source code
-│   │   ├── components/     # Reusable UI components
-│   │   ├── pages/          # Application pages (Dashboard, Reports, etc.)
-│   │   ├── services/       # API integration
-│   │   └── App.jsx         # Root component
-│   └── package.json        # Node Dependencies
-├── fintech.db              # SQLite Database (Auto-generated)
-├── populate_data.py        # Script to seed database with mock data
-└── start_app.bat           # Utility script to launch the app
+backend/                     FastAPI service
+├── main.py                  API routes (/api/*)
+├── domain.py                Supply-chain semantics (single source of meaning)
+├── models.py                SQLAlchemy ORM models
+├── database.py              DB connection / session
+└── services/
+    ├── supply_chain.py      Analytics: KPIs, forecasting, suppliers, variance…
+    └── ai_insights.py       AI analyst + executive summary (OpenRouter + fallback)
+
+frontend/                    React (Vite) + Tailwind v4 + Recharts
+└── src/
+    ├── pages/               ExecutiveSummary, Forecasting, Operations, AiInsights, Scenario
+    ├── components/          Layout + shared UI primitives
+    ├── services/api.js      API client
+    └── utils/format.js      Indian-numbering / currency formatting
+
+populate_data.py             Seeds a realistic FY20–FY24 transactional dataset
+test_backend.py             API smoke tests
 ```
 
-## Getting Started
+**Stack:** FastAPI · SQLAlchemy · SQLite · pandas · statsmodels (Holt-Winters) ·
+React 19 · Vite · Tailwind CSS v4 · Recharts · OpenRouter (optional).
+
+---
+
+## Quick start
 
 ### Prerequisites
-*   **Python**: 3.9+
-*   **Node.js**: 16+
+- Python 3.9+
+- Node.js 18+
 
-### 1. Backend Setup
-
-Navigate to the project root:
+### 1 · Backend
 
 ```bash
-# Create a virtual environment (optional but recommended)
-python -m venv venv
-# Windows
-.\venv\Scripts\activate
-# Mac/Linux
-source venv/bin/activate
-
-# Install dependencies
 pip install -r backend/requirements.txt
 
-# Seed the database with sample data
+# Seed the demo database (creates fintech.db)
 python populate_data.py
+
+# Run the API
+cd backend
+python -m uvicorn main:app --reload --port 8000
 ```
 
-Start the backend server:
+API: `http://localhost:8000` · interactive docs: `http://localhost:8000/docs`
 
-```bash
-uvicorn backend.main:app --reload
-```
-The API will be available at `http://127.0.0.1:8000`.
-API Docs: `http://127.0.0.1:8000/docs`
-
-### 2. Frontend Setup
-
-Open a new terminal and navigate to the `frontend` directory:
+### 2 · Frontend
 
 ```bash
 cd frontend
-
-# Install dependencies
 npm install
-
-# Start the development server
 npm run dev
 ```
-The application will launch at `http://localhost:5173`.
 
-## Usage Guide
-1.  **Dashboard**: View high-level metrics and recent trends.
-2.  **Forecast**: Check future revenue/expense projections.
-3.  **Scenario Analysis**: Use the sliders to simulate "What-If" scenarios (e.g., "What if enrollment drops by 10%?").
-4.  **Anomalies**: Review flagged transactions that deviate from normal patterns.
-5.  **Reports**: Generate and view quarterly financial summaries.
+App: `http://localhost:5173`
 
-## License
-Proprietary - JSSATEB Fintech Project
+> On Windows you can launch both with `start_app.bat`.
+
+---
+
+## Enabling live AI (optional)
+
+The AI features work out of the box using a deterministic, metric-driven engine
+(labelled **"Rule-based"** in the UI). To use a live LLM via
+[OpenRouter](https://openrouter.ai):
+
+1. Copy `backend/.env.example` to `backend/.env`
+2. Set `OPENROUTER_API_KEY=...`
+3. Restart the backend
+
+Responses then switch to **"Live AI"**. If the key is missing or the network is
+unavailable, the platform **automatically falls back** to the rule-based engine —
+so a demo always works.
+
+---
+
+## Design notes
+
+- **Demand/cost trends are year-over-year**, the correct metric for seasonal
+  order patterns (a quarter-on-quarter view would just track the season).
+- **Forecasts** use Holt-Winters exponential smoothing with confidence bands
+  derived from in-sample residuals.
+- **Spend anomalies** are detected per cost bucket (Z-score), so genuine outliers
+  surface instead of every routine payroll run.
+- **AI answers are grounded**: the model only reasons over a structured snapshot
+  of current metrics, never free-form invention.

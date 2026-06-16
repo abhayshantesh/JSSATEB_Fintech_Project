@@ -1,124 +1,129 @@
-
 import React, { useState } from 'react';
-import { Outlet, Link, useLocation } from 'react-router-dom';
+import { Outlet, NavLink, useLocation } from 'react-router-dom';
 import {
     LayoutDashboard,
     TrendingUp,
-    PieChart,
-    AlertTriangle,
-    Landmark,
-    Wallet,
-    Settings,
+    BarChart3,
+    Sparkles,
+    SlidersHorizontal,
     Menu,
     X,
-    ChevronRight,
-    Calculator,
-    Lightbulb,
-    ArrowLeftRight,
-    Building,
-    Receipt,
-    FileText
+    Landmark,
 } from 'lucide-react';
 
-const Sidebar = ({ isOpen, toggleSidebar }) => {
-    const location = useLocation();
+const NAV = [
+    { name: 'Executive Summary', path: '/', icon: LayoutDashboard, end: true },
+    { name: 'Forecasting', path: '/forecasting', icon: TrendingUp },
+    { name: 'Financial Analytics', path: '/analytics', icon: BarChart3 },
+    { name: 'AI Insights', path: '/ai-insights', icon: Sparkles },
+    { name: 'Scenario Analysis', path: '/scenario', icon: SlidersHorizontal },
+];
 
-    const navItems = [
-        { name: 'Dashboard', path: '/', icon: LayoutDashboard },
-        { name: 'Forecasts', path: '/forecasts', icon: TrendingUp },
-        { name: 'Financial Position', path: '/financial-position', icon: Landmark },
-        { name: 'Correlations', path: '/correlations', icon: PieChart },
-        { name: 'Scenario Analysis', path: '/scenario', icon: Calculator },
-        { name: 'Anomalies', path: '/anomalies', icon: AlertTriangle },
-        { name: 'Recommendations', path: '/recommendations', icon: Lightbulb },
-        { name: 'Budgets', path: '/budgets', icon: Wallet },
-        { name: 'Transactions', path: '/transactions', icon: ArrowLeftRight },
-        { name: 'Reports', path: '/reports', icon: FileText },
-    ];
-
-    return (
-        <aside className={`fixed inset-y-0 left-0 z-50 w-64 bg-slate-900 text-white transform transition-transform duration-300 ease-in-out ${isOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 lg:static lg:inset-auto`}>
-            <div className="flex items-center justify-between h-16 px-6 bg-slate-950">
-                <span className="text-xl font-bold tracking-tight text-white">JSSATEB <span className="text-indigo-500">Fintech</span></span>
-                <button onClick={toggleSidebar} className="lg:hidden text-slate-400 hover:text-white">
-                    <X size={24} />
-                </button>
-            </div>
-
-            <nav className="p-4 space-y-1">
-                {navItems.map((item) => {
-                    const isActive = location.pathname === item.path;
-                    return (
-                        <Link
-                            key={item.path}
-                            to={item.path}
-                            className={`flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-colors duration-150 ${isActive
-                                ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/30'
-                                : 'text-slate-400 hover:bg-slate-800 hover:text-white'
-                                }`}
-                        >
-                            <item.icon size={20} className="mr-3" />
-                            {item.name}
-                            {isActive && <ChevronRight size={16} className="ml-auto" />}
-                        </Link>
-                    );
-                })}
-            </nav>
-
-            <div className="absolute bottom-0 w-full p-4 border-t border-slate-800">
-                <Link to="/settings" className="flex items-center px-4 py-3 text-sm font-medium text-slate-400 rounded-lg hover:bg-slate-800 hover:text-white transition-colors">
-                    <Settings size={20} className="mr-3" />
-                    Settings
-                </Link>
-            </div>
-        </aside>
-    );
+const PAGE_META = {
+    '/': 'Executive Summary',
+    '/forecasting': 'Revenue & Expense Forecasting',
+    '/analytics': 'Financial Analytics',
+    '/ai-insights': 'AI Insights',
+    '/scenario': 'Scenario Analysis',
 };
 
-const Navbar = ({ toggleSidebar }) => {
-    return (
-        <header className="sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b border-slate-200 h-16 flex items-center justify-between px-6 shadow-sm">
-            <div className="flex items-center">
-                <button onClick={toggleSidebar} className="lg:hidden text-slate-600 hover:text-slate-900 mr-4">
-                    <Menu size={24} />
-                </button>
-                <h2 className="text-lg font-semibold text-slate-800 hidden sm:block">Institutional Financial Analytics</h2>
+const Brand = () => (
+    <div className="flex items-center gap-2.5">
+        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-600 text-white">
+            <Landmark size={17} strokeWidth={2.5} />
+        </div>
+        <div className="leading-tight">
+            <div className="text-[14px] font-semibold tracking-tight text-white">JSSATEB</div>
+            <div className="text-[10.5px] font-medium uppercase tracking-wider text-ink-400">
+                Financial Analytics
             </div>
+        </div>
+    </div>
+);
 
-            <div className="flex items-center space-x-4">
-                <div className="text-right hidden md:block">
-                    <p className="text-sm font-medium text-slate-900">Admin User</p>
-                    <p className="text-xs text-slate-500">Finance Dept</p>
-                </div>
-                <div className="h-10 w-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-bold border border-indigo-200">
-                    AU
-                </div>
+const Sidebar = ({ open, close }) => (
+    <aside
+        className={`fixed inset-y-0 left-0 z-50 flex w-64 flex-col bg-ink-950 transition-transform duration-300 lg:static lg:translate-x-0 ${
+            open ? 'translate-x-0' : '-translate-x-full'
+        }`}
+    >
+        <div className="flex h-16 items-center justify-between px-5">
+            <Brand />
+            <button onClick={close} className="text-ink-400 hover:text-white lg:hidden">
+                <X size={20} />
+            </button>
+        </div>
+
+        <nav className="flex-1 space-y-1 px-3 py-3">
+            {NAV.map((item) => (
+                <NavLink
+                    key={item.path}
+                    to={item.path}
+                    end={item.end}
+                    onClick={close}
+                    className={({ isActive }) =>
+                        `flex items-center gap-3 rounded-lg px-3 py-2.5 text-[13.5px] font-medium transition-colors ${
+                            isActive
+                                ? 'bg-white/10 text-white'
+                                : 'text-ink-400 hover:bg-white/5 hover:text-ink-100'
+                        }`
+                    }
+                >
+                    <item.icon size={18} strokeWidth={2} />
+                    {item.name}
+                </NavLink>
+            ))}
+        </nav>
+
+        <div className="px-5 py-4">
+            <div className="rounded-lg border border-white/10 bg-white/5 px-3 py-2.5">
+                <p className="text-[11px] font-medium text-ink-300">Institutional dataset</p>
+                <p className="text-[11px] text-ink-500 mt-0.5">FY20–FY24 · 20k+ transactions</p>
             </div>
-        </header>
-    );
-};
+        </div>
+    </aside>
+);
+
+const Topbar = ({ openSidebar, title }) => (
+    <header className="sticky top-0 z-40 flex h-16 items-center justify-between border-b border-ink-200 bg-canvas/85 px-5 backdrop-blur-md sm:px-7">
+        <div className="flex items-center gap-3">
+            <button onClick={openSidebar} className="text-ink-600 hover:text-ink-900 lg:hidden">
+                <Menu size={22} />
+            </button>
+            <h2 className="text-[15px] font-semibold text-ink-800">{title}</h2>
+        </div>
+        <div className="flex items-center gap-3">
+            <div className="hidden text-right sm:block">
+                <p className="text-[12.5px] font-medium text-ink-800">Finance Office</p>
+                <p className="text-[11px] text-ink-400">JSS Academy of Technical Education</p>
+            </div>
+            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-ink-900 text-[12px] font-semibold text-white">
+                FO
+            </div>
+        </div>
+    </header>
+);
 
 const Layout = () => {
-    const [isSidebarOpen, setSidebarOpen] = useState(false);
-    const toggleSidebar = () => setSidebarOpen(!isSidebarOpen);
+    const [open, setOpen] = useState(false);
+    const location = useLocation();
+    const title = PAGE_META[location.pathname] || 'Institutional Financial Analytics';
 
     return (
-        <div className="flex h-screen overflow-hidden bg-slate-50">
-            <Sidebar isOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
-
-            <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-                <Navbar toggleSidebar={toggleSidebar} />
-
-                <main className="flex-1 overflow-y-auto p-6 scroll-smooth">
-                    <Outlet />
+        <div className="flex h-screen overflow-hidden">
+            <Sidebar open={open} close={() => setOpen(false)} />
+            <div className="flex min-w-0 flex-1 flex-col">
+                <Topbar openSidebar={() => setOpen(true)} title={title} />
+                <main className="flex-1 overflow-y-auto px-5 py-6 sm:px-7 sm:py-7">
+                    <div className="mx-auto max-w-[1280px]">
+                        <Outlet />
+                    </div>
                 </main>
             </div>
-
-            {/* Mobile overlay */}
-            {isSidebarOpen && (
+            {open && (
                 <div
-                    className="fixed inset-0 z-40 bg-black/50 lg:hidden backdrop-blur-sm"
-                    onClick={toggleSidebar}
+                    className="fixed inset-0 z-40 bg-ink-950/50 backdrop-blur-sm lg:hidden"
+                    onClick={() => setOpen(false)}
                 />
             )}
         </div>

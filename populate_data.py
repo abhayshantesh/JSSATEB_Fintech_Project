@@ -330,6 +330,22 @@ def populate_db():
     session.commit()
 
     print("Generating Transactions (Revenue & Expenses)...")
+    # Recurring named suppliers per procurement category. A small, stable pool
+    # makes supplier-spend concentration and risk analytics meaningful and keeps
+    # the demo narrative consistent across re-seeds.
+    supplier_pool = {
+        "Equipment": [
+            "Apex Components Pvt Ltd", "Meridian Electronics", "TitanTech Industries",
+            "Nova Precision Parts", "Sigma Materials Co",
+        ],
+        "Travel": [
+            "BlueDart Logistics", "TransGlobal Freight", "Reliant Carriers",
+            "SwiftLine Shipping",
+        ],
+        "Utilities": ["State Power Utility", "GreenGrid Energy", "Metro Water Board"],
+        "Maintenance": ["FacilityCare Services", "ProMaint Solutions", "UptimeFM Ltd"],
+    }
+
     current_date = datetime.date(2020, 1, 1)
     end_date = datetime.date(2024, 12, 31)
     batch_size = 1000
@@ -383,35 +399,59 @@ def populate_db():
                     payment_mode="Transfer"
                 ))
 
-        # --- Expenses ---
+        # --- Expenses (supply-chain cost structure) ---
+        # The expense ledger is shaped to read as a manufacturer's cost base:
+        # Direct Labor is a recurring monthly payroll (~35-40% of total), while
+        # the bulk of spend is procurement — Materials/Components, Freight,
+        # Energy and Facility — booked frequently against recurring suppliers
+        # so supplier-spend, cost-driver and anomaly analytics have real signal.
+
+        # Monthly Direct Labor (payroll) per plant — moderate, so it does not
+        # dwarf procurement spend.
         if current_date.day >= 28:
-             for d in depts:
+            for d in depts:
+                if d[0] == "ADM":
+                    continue
                 exp_buffer.append(ExpenseTransaction(
                     txn_id=fake.uuid4(),
                     txn_date=current_date,
-                    amount=round(random.uniform(500000, 1500000), 2),
+                    amount=round(random.uniform(180000, 320000), 2),
                     category="Salary",
                     dept_id=d[0],
                     emp_id=None,
                     vendor="Bank Payroll",
-                    description="Monthly Salary Disbursement",
+                    description="Monthly Direct Labor",
                     payment_mode="Transfer"
                 ))
-        
-        if random.random() < 0.2:
-             d = random.choice(depts)
-             cat = random.choice(["Utilities", "Maintenance", "Equipment", "Travel"])
-             exp_buffer.append(ExpenseTransaction(
-                 txn_id=fake.uuid4(),
-                 txn_date=current_date,
-                 amount=round(random.uniform(5000, 100000), 2),
-                 category=cat,
-                 dept_id=d[0],
-                 emp_id=None,
-                 vendor=fake.company(),
-                 description=f"{cat} Invoice",
-                 payment_mode="Transfer"
-             ))
+
+        # Procurement purchases — several most days, scaled with order season so
+        # cost tracks demand. Materials & Freight dominate (true COGS drivers).
+        season = current_date.month in [8, 9, 1, 2]
+        n_purchases = random.randint(4, 9) if season else random.randint(2, 5)
+        for _ in range(n_purchases):
+            roll = random.random()
+            if roll < 0.45:
+                cat, lo, hi = "Equipment", 120000, 900000       # Materials & Components
+            elif roll < 0.72:
+                cat, lo, hi = "Travel", 60000, 450000           # Inbound/Outbound Freight
+            elif roll < 0.88:
+                cat, lo, hi = "Utilities", 45000, 220000        # Energy & Utilities
+            else:
+                cat, lo, hi = "Maintenance", 30000, 180000      # Facility & Maintenance
+
+            d = random.choice([x for x in depts if x[0] != "ADM"])
+            supplier = random.choice(supplier_pool[cat])
+            exp_buffer.append(ExpenseTransaction(
+                txn_id=fake.uuid4(),
+                txn_date=current_date,
+                amount=round(random.uniform(lo, hi), 2),
+                category=cat,
+                dept_id=d[0],
+                emp_id=None,
+                vendor=supplier,
+                description=f"{cat} purchase order",
+                payment_mode="Transfer"
+            ))
 
         current_date += datetime.timedelta(days=1)
         
@@ -425,6 +465,62 @@ def populate_db():
     session.add_all(txns_buffer)
     session.add_all(exp_buffer)
     session.commit()
+
+    print("Injecting spend anomalies...")
+    # A few deliberate outliers so anomaly monitoring has clear, explainable
+    # hits to demonstrate (e.g. an emergency freight charge, a rush material buy).
+    anomaly_specs = [
+        (datetime.date(2024, 3, 14), "Travel", 2450000, "TransGlobal Freight",
+         "Emergency air freight - line-down recovery"),
+        (datetime.date(2024, 7, 22), "Equipment", 3850000, "TitanTech Industries",
+         "Expedited material buy - supplier shortfall"),
+        (datetime.date(2024, 10, 9), "Utilities", 1180000, "State Power Utility",
+         "Peak-demand energy surcharge"),
+    ]
+    for d_date, cat, amt, vendor, desc in anomaly_specs:
+        session.add(ExpenseTransaction(
+            txn_id=fake.uuid4(), txn_date=d_date, amount=amt, category=cat,
+            dept_id="CSE", emp_id=None, vendor=vendor, description=desc,
+            payment_mode="Transfer",
+        ))
+    session.commit()
+
+    print("Reconciling procurement budgets (allocated vs actual spend)...")
+    # Backfill each budget's spent_amount from the actual expense ledger so
+    # budget-vs-actual variance analysis reflects real spend (the generator
+    # otherwise leaves spent_amount at zero).
+    from sqlalchemy import func as _func
+    # Map raw expense categories to the budget categories used in seeding.
+    exp_to_budget = {
+        "Salary": "Salaries", "Equipment": "Infrastructure",
+        "Maintenance": "Maintenance", "Utilities": "Utilities", "Travel": "Research",
+    }
+    actuals = {}  # (dept_id, budget_category) -> total actual spend
+    rows = session.query(
+        ExpenseTransaction.dept_id, ExpenseTransaction.category,
+        _func.sum(ExpenseTransaction.amount).label("total"),
+    ).group_by(ExpenseTransaction.dept_id, ExpenseTransaction.category).all()
+    for dept_id, exp_cat, total in rows:
+        bcat = exp_to_budget.get(exp_cat)
+        if not bcat:
+            continue
+        actuals[(dept_id, bcat)] = actuals.get((dept_id, bcat), 0) + float(total or 0)
+
+    # Set BOTH allocated and spent from the actual ledger so budget-vs-actual
+    # variance is realistic by construction (utilisation clusters near 100% with
+    # a believable spread of over/under per line) regardless of spend scale.
+    for b in session.query(Budget).all():
+        key = (b.dept_id, b.category)
+        if key in actuals:
+            share = actuals[key] / 3.0  # actual spend split across 3 fiscal years
+            # Deterministic per-row factors (avoid Python's salted hash()).
+            seed = sum(ord(c) for c in b.budget_id)
+            spent_factor = 0.90 + ((seed % 22) / 100.0)        # 0.90 - 1.11
+            target_util = 0.82 + ((seed % 36) / 100.0)         # 0.82 - 1.17 (over & under)
+            b.spent_amount = round(share * spent_factor, 2)
+            b.allocated_amount = round(b.spent_amount / target_util, 2)
+    session.commit()
+
     print("Database Population Complete: fintech.db")
 
 if __name__ == "__main__":

@@ -1,91 +1,125 @@
 @import "tailwindcss";
 
+/*
+  Supply Chain Intelligence — Executive Design System
+  ---------------------------------------------------
+  Restrained enterprise palette: a near-neutral slate canvas, one confident
+  brand accent (a refined deep red echoing Molex), and semantic colours used
+  sparingly for status. Strong hierarchy, generous whitespace, no decoration.
+*/
+
 @theme {
-  /* Slate - Backgrounds and Text */
-  --color-slate-50: #f8fafc;
-  --color-slate-100: #f1f5f9;
-  --color-slate-200: #e2e8f0;
-  --color-slate-300: #cbd5e1;
-  --color-slate-400: #94a3b8;
-  --color-slate-500: #64748b;
-  --color-slate-600: #475569;
-  --color-slate-700: #334155;
-  --color-slate-800: #1e293b;
-  --color-slate-900: #0f172a;
-  --color-slate-950: #020617;
+  /* Neutrals (canvas, surfaces, text) */
+  --color-canvas: #f6f7f9;
+  --color-surface: #ffffff;
+  --color-ink-50: #f8fafc;
+  --color-ink-100: #f1f5f9;
+  --color-ink-200: #e6e9ee;
+  --color-ink-300: #cbd2da;
+  --color-ink-400: #94a0ae;
+  --color-ink-500: #667281;
+  --color-ink-600: #4a5563;
+  --color-ink-700: #364150;
+  --color-ink-800: #1f2937;
+  --color-ink-900: #111827;
+  --color-ink-950: #0b1220;
 
-  /* Indigo - Primary Brand Color */
-  --color-indigo-50: #eef2ff;
-  --color-indigo-100: #e0e7ff;
-  --color-indigo-200: #c7d2fe;
-  --color-indigo-500: #6366f1;
-  --color-indigo-600: #4f46e5;
-  --color-indigo-700: #4338ca;
+  /* Brand accent — refined deep red */
+  --color-brand-50: #fdf3f3;
+  --color-brand-100: #fbe3e3;
+  --color-brand-500: #c8323a;
+  --color-brand-600: #a81f2a;
+  --color-brand-700: #8a1822;
 
-  /* Emerald - Success/Positive Financials */
-  --color-emerald-50: #ecfdf5;
-  --color-emerald-500: #10b981;
-  --color-emerald-600: #059669;
+  /* Status (semantic, used sparingly) */
+  --color-positive-50: #ecfdf3;
+  --color-positive-500: #12a150;
+  --color-positive-600: #0e7c3d;
+  --color-warning-50: #fff8eb;
+  --color-warning-500: #d99008;
+  --color-warning-600: #b67606;
+  --color-negative-50: #fef2f2;
+  --color-negative-500: #dc3545;
+  --color-negative-600: #b52a38;
+  --color-info-50: #eff5ff;
+  --color-info-500: #2f6fed;
+  --color-info-600: #1f54c0;
 
-  /* Red - Danger/Negative Financials */
-  --color-red-50: #fef2f2;
-  --color-red-500: #ef4444;
-  --color-red-600: #dc2626;
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 
-  /* Amber - Warning */
-  --color-amber-50: #fffbeb;
-  --color-amber-500: #f59e0b;
-  --color-amber-600: #d97706;
-
-  /* Blue - Information */
-  --color-blue-50: #eff6ff;
-  --color-blue-500: #3b82f6;
-  --color-blue-600: #2563eb;
-
-  /* Purple - Accent */
-  --color-purple-500: #8b5cf6;
-  --color-purple-600: #7c3aed;
-
-  /* Green - Alternative Success */
-  --color-green-500: #22c55e;
-  --color-green-600: #16a34a;
-
-  /* Semantic Color Aliases for Components */
-  --color-success: #10b981;
-  --color-danger: #ef4444;
-  --color-warning: #f59e0b;
-  --color-accent: #6366f1;
+  --radius-card: 14px;
 }
 
 @layer base {
+  html, body, #root {
+    height: 100%;
+    width: 100%;
+  }
+  html {
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
   body {
-    @apply bg-slate-50 text-slate-800 font-sans antialiased;
+    @apply bg-canvas text-ink-800 font-sans;
+    margin: 0;
+    font-feature-settings: "cv11", "ss01";
+  }
+  /* Tabular figures for all numeric/metric contexts */
+  .tnum {
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.01em;
+  }
+  h1, h2, h3 {
+    @apply text-ink-900;
+    letter-spacing: -0.02em;
   }
 }
 
-/* Glassmorphism Utilities */
-.glass {
-  @apply bg-white/70 backdrop-blur-md border border-white/20 shadow-sm;
+@layer components {
+  /* Surface card — the single primitive for every panel */
+  .card {
+    @apply bg-surface rounded-[var(--radius-card)] border border-ink-200/80;
+    box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04), 0 1px 3px rgba(16, 24, 40, 0.03);
+  }
+  .card-pad {
+    @apply p-5 sm:p-6;
+  }
+
+  /* Section heading rhythm */
+  .section-title {
+    @apply text-[15px] font-semibold text-ink-900;
+  }
+  .section-sub {
+    @apply text-[13px] text-ink-500 mt-0.5;
+  }
+
+  /* Eyebrow / label */
+  .eyebrow {
+    @apply text-[11px] font-semibold uppercase tracking-wider text-ink-400;
+  }
+
+  /* Status pill */
+  .pill {
+    @apply inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[12px] font-medium;
+  }
+
+  /* Primary / secondary buttons */
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg px-3.5 py-2 text-[13px] font-medium transition-colors;
+  }
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg px-3.5 py-2 text-[13px] font-medium transition-colors bg-ink-900 text-white hover:bg-ink-800;
+  }
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg px-3.5 py-2 text-[13px] font-medium transition-colors bg-surface border border-ink-300 text-ink-700 hover:bg-ink-50;
+  }
 }
 
-.card {
-  @apply bg-white rounded-xl shadow-sm border border-slate-200 p-6;
-}
+/* Slim, unobtrusive scrollbars */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--color-ink-300); border-radius: 9999px; }
+::-webkit-scrollbar-thumb:hover { background: var(--color-ink-400); }
 
-/* Custom Scrollbar */
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-
-::-webkit-scrollbar-track {
-  @apply bg-transparent;
-}
-
-::-webkit-scrollbar-thumb {
-  @apply bg-slate-300 rounded-full;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  @apply bg-slate-400;
-}
+/* Range input accent */
+input[type="range"] { accent-color: var(--color-brand-600); }

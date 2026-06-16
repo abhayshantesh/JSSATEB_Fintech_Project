@@ -1,124 +1,128 @@
+"""
+Smoke tests for the Supply Chain Intelligence API.
 
-from fastapi.testclient import TestClient
-from backend.main import app
-import sys
+Validates that every endpoint responds 200 and returns the expected shape, by
+calling a running server. Start the API first, then run this from the root:
+
+    # terminal 1
+    cd backend && python -m uvicorn main:app --port 8000
+    # terminal 2
+    python test_backend.py
+
+Override the target with BASE_URL (e.g. a deployed instance).
+"""
+
 import os
+import sys
 
-# Add backend to path if needed (though running from root usually works if backend is a package)
-sys.path.append(os.getcwd())
+import requests
 
-client = TestClient(app)
-
-def test_financial_position_endpoints():
-    print("Testing /financial-position/summary...")
-    response = client.get("/financial-position/summary")
-    assert response.status_code == 200
-    data = response.json()
-    assert "total_assets" in data
-    assert "total_liabilities" in data
-    assert "net_worth" in data
-    print(f" Financial Position: {data}")
-
-    print("Testing /assets...")
-    response = client.get("/assets")
-    assert response.status_code == 200
-    assets = response.json()
-    assert isinstance(assets, list)
-    if len(assets) > 0:
-        assert "asset_id" in assets[0]
-        assert "value" in assets[0]
-    print(f" Assets found: {len(assets)}")
-    
-    print("Testing /liabilities...")
-    response = client.get("/liabilities")
-    assert response.status_code == 200
-    liabilities = response.json()
-    assert isinstance(liabilities, list)
-    if len(liabilities) > 0:
-        assert "liability_id" in liabilities[0]
-    print(f" Liabilities found: {len(liabilities)}")
-
-def test_ml_endpoints():
-    print("Testing /analytics/forecast/revenue?months=12...")
-    response = client.get("/analytics/forecast/revenue?months=12")
-    if response.status_code != 200:
-        print(f"FAILED. Status: {response.status_code}, Body: {response.text}")
-    assert response.status_code == 200
-    forecast = response.json()
-    assert isinstance(forecast, list)
-    # Check if forecast has content (might be empty if not enough data, but we generated 5 years)
-    if len(forecast) > 0:
-        assert "date" in forecast[0]
-        assert "predicted_amount" in forecast[0]
-    print(f" Revenue Forecast points: {len(forecast)}")
-
-    print("Testing /analytics/anomalies...")
-    response = client.get("/analytics/anomalies")
-    assert response.status_code == 200
-    anomalies = response.json()
-    assert "anomalies" in anomalies
-    assert "total_count" in anomalies
-    print(f" Anomalies detected: {anomalies['total_count']}")
-
-    print("Testing /analytics/recommendations...")
-    response = client.get("/analytics/recommendations")
-    assert response.status_code == 200
-    recs = response.json()
-    assert "recommendations" in recs
-    print(f" Recommendations: {len(recs['recommendations'])}")
-
-def test_scenario_endpoint():
-    print("Testing /analytics/scenario...")
-    # Test valid case
-    params = "?enrollment_change=10&fee_change=5&grant_change=0&salary_change=5"
-    response = client.get(f"/analytics/scenario{params}")
-    assert response.status_code == 200, f"Scenario failed: {response.text}"
-    
-    data = response.json()
-    assert "baseline" in data
-    assert "projected" in data
-    assert "impact" in data
-    
-    impact = data['impact']
-    assert "revenue_change" in impact
-    assert "expense_change" in impact
-    assert "surplus_change" in impact
-    assert "impact_summary" in impact
-    
-    # Check logic: +Enrol +Fee should increase revenue
-    assert impact['revenue_change'] > 0
-    
-    print(f" Scenario Analysis Test Passed. Impact: {impact['impact_summary']}")
+BASE = os.getenv("BASE_URL", "http://127.0.0.1:8000")
 
 
+def _get(path):
+    return requests.get(f"{BASE}{path}", timeout=40)
 
-def test_correlation_endpoint():
-    print("Testing /analytics/correlation...")
-    response = client.get("/analytics/correlation")
-    assert response.status_code == 200
-    data = response.json()
-    assert "correlations" in data
-    corrs = data['correlations']
-    
-    # Check for keys I added
-    required_keys = ['student_revenue', 'faculty_salary', 'utility_students', 'budget_utilization']
-    for k in required_keys:
-        assert k in corrs, f"Missing correlation key: {k}"
-        # Values should be float
-        val = corrs[k]
-        assert isinstance(val, (int, float)), f"Value for {k} is not a number: {val}"
-        
-    print(f" Correlation data valid. Keys: {list(corrs.keys())}")
+
+def _post(path, body):
+    return requests.post(f"{BASE}{path}", json=body, timeout=40)
+
+
+def test_health():
+    r = _get("/health")
+    assert r.status_code == 200
+    assert r.json()["status"] == "ok"
+
+
+def test_executive_summary():
+    r = _get("/api/executive-summary")
+    assert r.status_code == 200
+    data = r.json()
+    for key in ["total_revenue", "total_expenses", "net_surplus", "operating_margin_pct",
+                "health_score", "risk_level", "liquidity_ratio", "net_worth"]:
+        assert key in data, f"missing {key}"
+
+
+def test_trends():
+    r = _get("/api/trends?months=12")
+    assert r.status_code == 200
+    rows = r.json()
+    assert isinstance(rows, list) and rows
+    assert {"period", "revenue", "expenses", "surplus"} <= set(rows[0])
+
+
+def test_forecasts():
+    for path in ["/api/forecast/revenue", "/api/forecast/expense"]:
+        r = _get(f"{path}?periods=6")
+        assert r.status_code == 200
+        data = r.json()
+        assert "forecast" in data and len(data["forecast"]) == 6
+        assert {"period", "forecast", "lower", "upper"} <= set(data["forecast"][0])
+
+
+def test_vendors():
+    r = _get("/api/vendors?limit=5")
+    assert r.status_code == 200
+    rows = r.json()
+    assert rows and {"vendor", "spend", "transactions", "risk_tier"} <= set(rows[0])
+
+
+def test_expense_breakdown_and_variance():
+    r1 = _get("/api/expense-breakdown")
+    assert r1.status_code == 200 and r1.json()
+    assert {"category", "amount", "share_pct", "yoy_change_pct"} <= set(r1.json()[0])
+
+    r2 = _get("/api/budget-variance")
+    assert r2.status_code == 200 and r2.json()
+    assert {"category", "planned", "actual", "variance"} <= set(r2.json()[0])
+
+
+def test_financial_position():
+    r = _get("/api/financial-position")
+    assert r.status_code == 200
+    assert {"total_assets", "total_liabilities", "net_worth", "liquidity_ratio"} <= set(r.json())
+
+
+def test_anomalies():
+    r = _get("/api/anomalies?threshold=2.5")
+    assert r.status_code == 200
+    assert "anomalies" in r.json() and "total_count" in r.json()
+
+
+def test_scenario():
+    r = _get("/api/scenario?enrollment_change=10&fee_change=5")
+    assert r.status_code == 200
+    data = r.json()
+    assert {"baseline", "projected", "impact"} <= set(data)
+    assert "surplus_change" in data["impact"]
+
+
+def test_ai_endpoints():
+    r1 = _get("/api/ai/executive-summary")
+    assert r1.status_code == 200
+    data = r1.json()
+    assert "observations" in data and "actions" in data
+    assert data["source"] in ("openrouter", "rule-based")
+
+    r2 = _post("/api/ai/ask", {"question": "Why are expenses increasing?"})
+    assert r2.status_code == 200
+    assert "answer" in r2.json()
+
+
+def test_validation_guards():
+    assert _get("/api/forecast/revenue?periods=999").status_code == 400
+    assert _post("/api/ai/ask", {"question": ""}).status_code == 400
 
 
 if __name__ == "__main__":
-    try:
-        test_financial_position_endpoints()
-        test_ml_endpoints()
-        test_scenario_endpoint()
-        test_correlation_endpoint()
-        print("✅ ALL BACKEND TESTS PASSED")
-    except AssertionError as e:
-        print(f"❌ TEST FAILED: {e}")
-    except Exception as e:
-        print(f"❌ ERROR: {e}")
+    tests = [v for k, v in sorted(globals().items()) if k.startswith("test_")]
+    passed = 0
+    for t in tests:
+        try:
+            t()
+            print(f"  PASS  {t.__name__}")
+            passed += 1
+        except Exception as e:  # noqa: BLE001
+            print(f"  FAIL  {t.__name__}: {e}")
+    print(f"\n{passed}/{len(tests)} tests passed")
+    sys.exit(0 if passed == len(tests) else 1)
