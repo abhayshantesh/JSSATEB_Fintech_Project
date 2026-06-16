@@ -73,8 +73,12 @@ React 19 · Vite · Tailwind CSS v4 · Recharts · OpenRouter (optional).
 
 ### Option A — One click (Windows)
 
-Double-click **`start_app.bat`**. It creates a virtual environment, installs all
-dependencies, seeds the database (first run only), and launches both servers.
+- **First time:** double-click **`start_app.bat`**. It creates a virtual
+  environment, installs all dependencies, seeds the database, and launches both
+  servers.
+- **Every time after:** double-click **`run.bat`** — a quick launcher that just
+  starts the backend and frontend (no reinstall).
+
 The app opens at `http://localhost:5173`.
 
 ### Option B — Manual
